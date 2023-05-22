@@ -3,6 +3,10 @@ package study.datajpa.repository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
@@ -173,6 +177,50 @@ class MemberRepositoryTest {
         Member aaa1 = memberRepository.findMemberByUsername("AAA");
 
         Optional<Member> aaa2 = memberRepository.findOptionalByUsername("AAA");
+    }
+
+    @Test
+    void paging() {
+        //given
+        memberRepository.save(new Member("AAA1",10));
+        memberRepository.save(new Member("AAA2",10));
+        memberRepository.save(new Member("AAA3",10));
+        memberRepository.save(new Member("AAA4",10));
+        memberRepository.save(new Member("AAA5",10));
+        memberRepository.save(new Member("AAA6",10));
+
+        int age = 10;
+
+        //spring data jpa는 페이지가 0부터 시작
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+        //when
+        Page<Member> page = memberRepository.findByAge(age, pageRequest);  //반환값이 Page면 totalcount 쿼리도 같이 나간다.
+        Slice<Member> slice = memberRepository.findSliceByAge(age, pageRequest);  //totalcount가 나가지않고 limit에 +1에서 쿼리를 날린다.
+
+        //컨트롤러에서 엔티티를 반환하면 안되기 때문에 보통 DTO로 변환하게되는데 page.map()을 사용해서 편리하게 DTO 변환을 할 수 있다.
+        Page<MemberDto> toMap = page.map(member -> new MemberDto(member.getId(), member.getUsername(), null));
+
+        //then
+
+        //page
+        List<Member> content = page.getContent();
+        long totalElements = page.getTotalElements();
+
+        assertThat(content.size()).isEqualTo(3);
+        assertThat(totalElements).isEqualTo(6);
+        assertThat(page.getNumber()).isEqualTo(0);  // page.getNumber() 페이지번호
+        assertThat(page.getTotalPages()).isEqualTo(2);  // 총 페이지 갯수
+        assertThat(page.isFirst()).isTrue();  // 첫 페이지 여부
+        assertThat(page.hasNext()).isTrue();  // 다음 페이지 존재 여부
+
+        //slice
+        List<Member> sliceContent = slice.getContent();
+
+        assertThat(sliceContent.size()).isEqualTo(3);
+        assertThat(slice.getNumber()).isEqualTo(0);  // page.getNumber() 페이지번호
+        assertThat(slice.isFirst()).isTrue();  // 첫 페이지 여부
+        assertThat(slice.hasNext()).isTrue();  // 다음 페이지 존재 여부
     }
 
 }
