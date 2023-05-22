@@ -10,6 +10,7 @@ import study.datajpa.entity.Team;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -154,6 +155,24 @@ class MemberRepositoryTest {
         for (Member member : result) {
             System.out.println("member = " + member);
         }
+    }
+
+    @Test
+    void returnType() {
+        Member member1 = new Member("AAA",10);
+        Member member2 = new Member("BBB",20);
+
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        List<Member> aaa = memberRepository.findListByUsername("AAA");  //리스트 반환
+
+        // 만약에 데이터가 없으면 null이다. jpa에서는 singleResult()로 해서 exception을 내주는데, spring data jpa에서는 exception을 잡아 null로 세팅해준다.
+        // 데이터가 1건 이상이면 jpa는 nonunique~ exception을 반환하지만 spring이 데이터 사이즈 exception으로 바꿔줜다.
+        // 1건인경우는 받아진다.
+        Member aaa1 = memberRepository.findMemberByUsername("AAA");
+
+        Optional<Member> aaa2 = memberRepository.findOptionalByUsername("AAA");
     }
 
 }
