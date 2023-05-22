@@ -13,4 +13,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @Query(name = "Member.findByUsername")  // 주석처리하여도 네임드쿼리가 동작한다. 이유는 JPA가 엔티티.메소드명으로 먼저 namedQuery를 찾고 없으면, 메소드 이름으로 쿼리 생성을 하기 때문.
     List<Member> findByUsername(@Param("username") String username);  // 네임드 쿼리 호출. 파라미터가 있는 경우 @Param을 해주어야 한다.
+
+    @Query("select m from Member m where m.username = :username and m.age = :age") // 실무에서 많이 사용한다. "select ~~~" string이지만 컴파일 시 오타작성하면 오류 발생.
+    List<Member> findUser(@Param("username") String username, @Param("age") int age);
 }
