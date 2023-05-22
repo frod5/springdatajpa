@@ -1,39 +1,8 @@
 package study.datajpa.repository;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import study.datajpa.entity.Team;
 
-import java.util.List;
-import java.util.Optional;
-
-@Repository
-public class TeamRepository {
-
-    @PersistenceContext
-    private EntityManager em;
-
-    public Team save(Team team) {
-        em.persist(team);
-        return team;
-    }
-
-    public void delete(Team team) {
-        em.remove(team);
-    }
-
-    public List<Team> findAll() {
-        return em.createQuery("select t from Team t", Team.class)
-                .getResultList();
-    }
-
-    public Optional<Team> findById(Long id) {
-        return Optional.ofNullable(em.find(Team.class, id));
-    }
-
-    public long count() {
-        return em.createQuery("select count(t) from Team t", Long.class)
-                .getSingleResult();
-    }
+//인터페이스만 생성하면 JPA가 구현클래스를 만들어서 주입
+public interface TeamRepository extends JpaRepository<Team, Long> {
 }
