@@ -1,5 +1,7 @@
 package study.datajpa.repository;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +19,9 @@ class MemberJpaRepositoryTest {
 
     @Autowired
     MemberJpaRepository memberJpaRepository;
+
+    @PersistenceContext
+    EntityManager em;
 
     @Test
     void testMember() {
@@ -136,4 +141,26 @@ class MemberJpaRepositoryTest {
         assertThat(resultCount).isEqualTo(3);
     }
 
+
+    @Test
+    void JpaEventBaseEntity() throws InterruptedException {
+        //given
+        Member member = new Member("member1");
+        memberJpaRepository.save(member);  //@PrePersist
+
+        Thread.sleep(100);
+        member.setUsername("member2");
+
+        em.flush();  //@PreUpdate
+        em.clear();
+
+        //when
+        Member findMember = memberJpaRepository.findById(member.getId()).get();
+
+        //then
+        System.out.println("findMember.createdDate = " + findMember.getCreatedDate());
+        System.out.println("findMember.updatedDate = " + findMember.getLastModifiedDate());
+        System.out.println("findMember.createdBy = " + findMember.getCreatedBy());
+        System.out.println("findMember.updatedBy = " + findMember.getLastModifiedBy());
+    }
 }
