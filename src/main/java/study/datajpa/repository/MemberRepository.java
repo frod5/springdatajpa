@@ -3,6 +3,7 @@ package study.datajpa.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -45,4 +46,19 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Modifying(clearAutomatically = true)  //선언하지 않으면 update되지 않는다. clearAutomatically = true 선언 시 update 쿼리가 나가고 영속성 초기화를 해준다.
     @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
+
+    @Query("select m from Member m left join fetch m.team")
+    List<Member> findMemberFetchJoin();
+
+    @Override
+    @EntityGraph(attributePaths = {"team"})  // N+1 문제를 해결할떄 Fetch Join을 사용하는데, findAll() 또는 메소드 이름으로 생성하는 방식에는 직접 JPQL을 작성하지 않는다. 그럴떄 EntityGraph 사용.
+    List<Member> findAll();
+
+    @EntityGraph(attributePaths = {"team"})  //JPQL을 직접 작성하여도 entityGraph를 사용하면 fetch join과 같은 결과.
+    @Query("select m From Member m")
+    List<Member> findMemberEntityGraph();
+
+//    @EntityGraph(attributePaths = {"team"})  주로 JPQL을 직접 작성할 필요없는 경우에 간단하게 fetch join이 필요한 경우 사용한다.
+    @EntityGraph("Member.all")
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
 }
