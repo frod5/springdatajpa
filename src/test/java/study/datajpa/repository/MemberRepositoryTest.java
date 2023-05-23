@@ -12,7 +12,6 @@ import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -379,5 +378,41 @@ class MemberRepositoryTest {
         //정리
         //실무에서 사용하기에는 매칭 조건이 너무 단순하고, LEFT 조인이 안됨
         //실무에서는 QueryDSL을 사용하자
+    }
+
+    @Test
+    void projections() {
+        //given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member member1 = new Member("m1", 0, teamA);
+        Member member2 = new Member("m2", 0, teamA);
+        em.persist(member1);
+        em.persist(member2);
+
+        em.flush();
+        em.clear();
+
+        //when
+//        List<UserNameOnly> result = memberRepository.findProjectionsInterfaceByUsername("m1");
+//        List<UsernameOnlyDto> result = memberRepository.findProjectionsClassByUsername("m1", UsernameOnlyDto.class);
+        List<NestedClosedProjections> result = memberRepository.findProjectionsClassByUsername("m1", NestedClosedProjections.class);
+
+        for (NestedClosedProjections userNameOnly : result) {
+            System.out.println("userNameOnly = " + userNameOnly);
+        }
+
+        //주의
+        //프로젝션 대상이 root 엔티티면, JPQL SELECT 절 최적화 가능
+        //프로젝션 대상이 ROOT가 아니면
+        //LEFT OUTER JOIN 처리
+        //모든 필드를 SELECT해서 엔티티로 조회한 다음에 계산
+
+        //정리
+        //프로젝션 대상이 root 엔티티면 유용하다.
+        //프로젝션 대상이 root 엔티티를 넘어가면 JPQL SELECT 최적화가 안된다!
+        //실무의 복잡한 쿼리를 해결하기에는 한계가 있다.
+        //실무에서는 단순할 때만 사용하고, 조금만 복잡해지면 QueryDSL을 사용하자
     }
 }
